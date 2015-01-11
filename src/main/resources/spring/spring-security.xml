@@ -1,35 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans:beans xmlns="http://www.springframework.org/schema/security"
-             xmlns:beans="http://www.springframework.org/schema/beans"
-             xmlns:security="http://www.springframework.org/schema/security"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://www.springframework.org/schema/beans
-           http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
-           http://www.springframework.org/schema/security
-           http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:sec="http://www.springframework.org/schema/security"
+             xmlns:context="http://www.springframework.org/schema/context"
+             xsi:schemaLocation="http://www.springframework.org/schema/security
+                        http://www.springframework.org/schema/security/spring-security-3.2.xsd
+                        http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+                        http://www.springframework.org/schema/context
+                        http://www.springframework.org/schema/context/spring-context-4.0.xsd">
 
     <!-- HTTP basic authentication in Spring Security -->
-    <http pattern="/login*" security="none"/>
+    <http auto-config="true" create-session="always" access-denied-page="/accesdenied" use-expressions="true">
 
-    <http auto-config="true" create-session="always" access-denied-page="/login#denied">
-
-        <intercept-url pattern="/" access="ROLE_USER"/>
-
+        <intercept-url pattern="/login" access="permitAll" />
+        <intercept-url pattern="/logout" access="permitAll" />
+        <intercept-url pattern="/accessdenied" access="permitAll" />
+        <intercept-url pattern="/**" access="hasRole('ROLE_ADMIN')" />
         <form-login
                 login-page="/login"
                 login-processing-url="/j_spring_security_check"
-                authentication-failure-url="/login?fail"
-                default-target-url="/home"
-                always-use-default-target="true"/>
-        <logout logout-success-url="/login?bye" logout-url="/j_spring_security_logout"/>
+                authentication-failure-url="/accessdenied"
+                default-target-url="/welcome"
+                always-use-default-target="true"
+                />
+        <logout logout-success-url="/logout" logout-url="/j_spring_security_logout"/>
+
     </http>
 
-    <security:authentication-manager alias="auth">
-        <authentication-provider>
-            <user-service>
-                <user name="user" password="Passw0rd" authorities="ROLE_USER"/>
-                <user name="admin" password="Passw0rd3" authorities="ROLE_USER, ROLE_ADMIN"/>
-            </user-service>
-        </authentication-provider>
-    </security:authentication-manager>
+
+    <beans:import resource="classpath*:/spring/applicationContext-datasource.xml"/>
+
+    <sec:authentication-manager alias="authenticationManager">
+        <sec:authentication-provider>
+            <sec:password-encoder hash="md5">
+            </sec:password-encoder>
+            <sec:jdbc-user-service data-source-ref="h2DataSource"/>
+        </sec:authentication-provider>
+    </sec:authentication-manager>
+
 </beans:beans>
